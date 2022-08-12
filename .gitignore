@@ -1,0 +1,17 @@
+.*
+!.github
+!.gitignore
+!gradle/wrapper/gradle-wrapper.jar
+target/
+target-ide/
+*.iml
+logs/
+*.releaseBackup
+*.versionsBackup
+.vscode/
+.settings/
+.project
+.env
+.sdkmanrc
+build/
+bin/

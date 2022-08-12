@@ -1,0 +1,85 @@
+/*
+ * Copyright 2016-2021 The jetcd authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the 'License');
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an 'AS IS' BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+buildscript {
+    repositories {
+        gradlePluginPortal()
+    }
+    dependencies {
+        classpath "com.github.ben-manes:gradle-versions-plugin:${libs.versions.versionsPlugin.get()}"
+        classpath "com.diffplug.spotless:spotless-plugin-gradle:${libs.versions.spotlessPlugin.get()}"
+        classpath "net.ltgt.gradle:gradle-errorprone-plugin:${libs.versions.errorPronePlugin.get()}"
+        classpath "io.github.gradle-nexus:publish-plugin:${libs.versions.nexusPublishPlugin.get()}"
+        classpath "com.adarshr:gradle-test-logger-plugin:${libs.versions.testLoggerPlugin.get()}"
+        classpath "pl.allegro.tech.build:axion-release-plugin:${libs.versions.axionReleasePlugin.get()}"
+        classpath "org.gradle:test-retry-gradle-plugin:${libs.versions.testRetryPlugin.get()}"
+    }
+}
+
+apply from: "${rootProject.projectDir}/gradle/versions.gradle"
+apply from: "${rootProject.projectDir}/gradle/publish.gradle"
+apply from: "${rootProject.projectDir}/gradle/release.gradle"
+
+group = 'io.etcd'
+
+allprojects {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+}
+
+subprojects {
+    apply from: "${rootProject.projectDir}/gradle/style.gradle"
+    apply from: "${rootProject.projectDir}/gradle/quality.gradle"
+    apply from: "${rootProject.projectDir}/gradle/publishing-release.gradle"
+    apply from: "${rootProject.projectDir}/gradle/publishing-release-tasks.gradle"
+
+    apply plugin: 'java-library'
+    apply plugin: 'com.adarshr.test-logger'
+    apply plugin: 'org.gradle.test-retry'
+
+    configurations.api {
+        exclude group: 'com.google.code.gson', module: 'gson'
+        exclude group: 'com.google.android', module: 'annotations'
+        exclude group: 'com.google.j2objc', module: 'j2objc-annotations'
+        exclude group: 'org.codehaus.mojo', module: 'animal-sniffer-annotations'
+        exclude group: 'com.google.errorprone', module: 'error_prone_annotations'
+        exclude group: 'com.google.code.findbugs', module: 'jsr305'
+        exclude group: 'org.checkerframework', module: 'checker-compat-qual'
+    }
+
+    compileJava {
+        options.release = 8
+    }
+
+    test {
+        useJUnitPlatform()
+
+        maxParallelForks = Runtime.runtime.availableProcessors() ?: 1
+
+        retry {
+            maxRetries = 3
+            maxFailures = 5
+        }
+    }
+
+    testlogger {
+        theme 'mocha-parallel'
+        showStandardStreams false
+    }
+}
+

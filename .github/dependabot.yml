@@ -1,0 +1,11 @@
+version: 2
+updates:
+- package-ecosystem: maven
+  directory: "/"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: org.codehaus.plexus:plexus-compiler-javac-errorprone
+    versions:
+    - "> 2.8.6, < 2.9"
